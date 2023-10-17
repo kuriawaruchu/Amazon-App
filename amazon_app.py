@@ -1,6 +1,6 @@
 import streamlit as st
 import statsmodels.api as sm
-
+import base64
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.model_selection import train_test_split
@@ -132,13 +132,14 @@ def main():
         df = pd.read_csv(raw_data_csv_link)
     else:
         df = pd.read_csv(DEFAULT_CSV_URL)
-     # Optionally save predictions to a CSV file
+     # Optionally save predictions to a CSV file covering the duration selected
         if st.button('Save Predictions'):
-            
             # Provide a download link for the predictions CSV
-            predictions_csv = predictions_df.to_csv(index=False)
-            st.markdown(f'<a href="data:file/csv;base64,{predictions_csv}" download="stock_predictions.csv">Click here to download the predictions CSV file</a>', unsafe_allow_html=True)
-  
-    
+            csv_data = predictions_df.to_csv(index=False).encode()
+            b64 = base64.b64encode(csv_data).decode()
+            href = f'<a href="data:file/csv;base64,{b64}" download="stock_predictions.csv">Click here to download the predictions CSV file</a>'
+            st.markdown(href, unsafe_allow_html=True)
+
+     
 if __name__ == "__main__":
     main()

@@ -16,7 +16,7 @@ st.set_page_config(page_title='The BullBear Oracle', page_icon=im,
     layout='wide', initial_sidebar_state="expanded",menu_items={
         'Get Help': 'mailto:waruchu.analyst@gmail.com',
         'Report a bug': "mailto:waruchu.analyst@gmail.com",
-        'About': "# This is a header. This is an *extremely* cool app!"
+        'About': "# The BullBears at Moringa School created this app. We hope it helps!"
     })
 
 # Read and inject CSS

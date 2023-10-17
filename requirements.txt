@@ -1,0 +1,7 @@
+streamlit
+statsmodels
+pandas
+scikit-learn
+matplotlib
+pillow
+requests

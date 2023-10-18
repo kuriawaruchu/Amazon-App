@@ -11,6 +11,10 @@ import requests
 
 #------------------------------------------------------------------------------#
 # Page setup - the page title and layout
+st.sidebar.subheader("About")
+st.sidebar.write("The BullBears at Moringa School created this app. It uses pre-determined parameters of a SARIMA model to predict stock prices.")
+st.sidebar.write("We hope it helps!")
+
 im = Image.open('icon.png')
 st.set_page_config(page_title='The BullBear Oracle', page_icon=im,
     layout='wide', initial_sidebar_state="expanded",menu_items={
@@ -139,9 +143,7 @@ def main():
             b64 = base64.b64encode(csv_data).decode()
             href = f'<a href="data:file/csv;base64,{b64}" download="stock_predictions.csv">Click here to download the predictions CSV file</a>'
             st.markdown(href, unsafe_allow_html=True)
-st.sidebar.subheader("About")
-st.sidebar.write("The BullBears at Moringa School created this app. It uses pre-determined parameters of a SARIMA model to predict stock prices.")
-st.sidebar.write("We hope it helps!")
+
      
 if __name__ == "__main__":
     main()

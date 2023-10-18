@@ -1,65 +1,119 @@
 import streamlit as st
 import pickle
-import yfinance as yf
 import pandas as pd
-import numpy as np
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from statsmodels.tsa.seasonal import seasonal_decompose
+import yfinance as yf
 
-# Load the pre-trained SARIMA model.
-with open('sarima_model.sav', 'rb') as f:
-    model = pickle.load(f)
+# Load your SARIMA model
+with open('sarima_model.pkl', 'rb') as file:
+    sarima_model = pickle.load(file)
 
-def fetch_stock_data(ticker=None, start_date=None, end_date=None):
-    """Fetches and preprocesses stock data from yfinance.
+# Create a Streamlit app
+st.title('The BullBear Oracle - Stock Price Prediction App')
 
-    Args:
-        ticker: The stock ticker symbol.
-        start_date: The start date in datetime format.
-        end_date: The end date in datetime format.
+# User chooses between using a CSV file or specifying a stock symbol
+input_choice = st.sidebar.radio("Choose Input Method:", ("CSV File", "Stock Symbol"))
 
-    Returns:
-        A Pandas DataFrame containing the preprocessed stock data.
-    """
+if input_choice == "CSV File":
+    # User selects whether to upload a file or provide a link
+    input_method = st.sidebar.radio("Choose Input Method:", ("Upload a CSV File", "Link to CSV"))
 
-    if ticker is None:
-        ticker = 'AMZN'
+    if input_method == "Upload a CSV File":
+        # Create input widget to upload a CSV file
+        csv_file = st.sidebar.file_uploader("Upload a CSV file", type=["csv"])
 
-    df = yf.download(ticker, start=start_date, end=end_date)
+        if csv_file:
+            # Load data from the uploaded CSV file
+            data = pd.read_csv(csv_file)
 
-    # Apply the same preprocessing steps as the training data
-    decomposed = seasonal_decompose(df['Adj Close'], model='additive')
-    df['Adj Close'] = decomposed.resid
+            # Create input widget to select the date column
+            date_column = st.selectbox('Select Date Column', data.columns)
+            data[date_column] = pd.to_datetime(data[date_column])  # Convert the selected date column to datetime
 
-    return df
+            # Create input widgets for user input
+            prediction_date = st.date_input('Prediction Date')
 
-# Create the Streamlit app.
-st.title('Stock Price Prediction App')
+            # Create a dropdown menu to select the column to predict
+            column_to_predict = st.selectbox('Select Column to Predict', data.columns)
 
-# Get the user-specified ticker symbol and time period.
-ticker = st.text_input('Enter the stock ticker symbol:', value='AMZN')
-start_date = st.date_input("Start date:", pd.to_datetime("2023-10-2"))
-end_date = st.date_input('Enter the end date:', pd.to_datetime("2024-1-14"))
+            # Perform prediction using your SARIMA model
+            if st.button('Predict'):
+                try:
+                    # Filter data for the selected column to predict
+                    selected_column_data = data[['Date', column_to_predict]]
+                    selected_column_data.set_index('Date', inplace=True)
 
-# Fetch and preprocess the stock data.
-stock_data = fetch_stock_data(ticker=ticker, start_date=start_date, end_date=end_date)
+                    # Make sure your SARIMA model is capable of taking these inputs and returning predictions.
+                    prediction = sarima_model.predict(selected_column_data, prediction_date)
 
-# Check if the stock data DataFrame is empty.
-if stock_data.empty:
-    st.error('The stock data is empty. Please specify a different ticker symbol or time period.')
-else:
-    # Fit the SARIMA model to the stock data.
-    try:
-        results = model.fit(stock_data['Adj Close'])
-    except:
-        st.error("The SARIMA model could not be fit to the data. Please try a different ticker symbol or time period.")
+                    # Display the prediction
+                    st.write(f'Predicted {column_to_predict} on {prediction_date}: ${prediction:.2f}')
+                except KeyError:
+                    st.error('Invalid input or data not found. Please check your input and data.')
     else:
-        # Make a prediction.
-        forecast = results.get_forecast(steps=90)
-        prediction = forecast.predicted_mean
+        # Create input widget to enter a link to the CSV file
+        csv_link = st.sidebar.text_input("Enter the link to the CSV file")
+        if csv_link:
+            try:
+                # Load data from the provided CSV file link
+                data = pd.read_csv(csv_link)
 
-        # Display the original and predicted prices.
-        st.write('Original Adjusted Close Price:', stock_data['Adj Close'])
-        st.write('Predicted Adjusted Close Price:', prediction)
+                # Create input widget to select the date column
+                date_column = st.selectbox('Select Date Column', data.columns)
+                data[date_column] = pd.to_datetime(data[date_column])  # Convert the selected date column to datetime
+
+                # Create input widgets for user input
+                prediction_date = st.date_input('Prediction Date')
+
+                # Create a dropdown menu to select the column to predict
+                column_to_predict = st.selectbox('Select Column to Predict', data.columns)
+
+                # Perform prediction using your SARIMA model
+                if st.button('Predict'):
+                    try:
+                        # Filter data for the selected column to predict
+                        selected_column_data = data[['Date', column_to_predict]]
+                        selected_column_data.set_index('Date', inplace=True)
+
+                        # Make sure your SARIMA model is capable of taking these inputs and returning predictions.
+                        prediction = sarima_model.predict(selected_column_data, prediction_date)
+
+                        # Display the prediction
+                        st.write(f'Predicted {column_to_predict} on {prediction_date}: ${prediction:.2f}')
+                    except KeyError:
+                        st.error('Invalid input or data not found. Please check your input and data.')
+            except Exception as e:
+                st.error(f'An error occurred while loading data from the provided link: {str(e)}')
+
+else:
+    # User chooses to specify a stock symbol for prediction
+    stock_symbol = st.sidebar.text_input('Enter Stock Symbol', 'AAPL')
+
+    # Import stock data using yfinance
+    try:
+        stock_data = yf.download(stock_symbol, period="1d", interval="1d")
+        stock_data.reset_index(inplace=True)
+
+        # Set the 'Date' column as the index
+        stock_data.set_index('Date', inplace=True)
+
+        # Localize timezone if needed (example with 'America/New_York')
+        # stock_data.index = stock_data.index.tz_localize('America/New_York')
+
+        # Create input widgets for user input
+        date_column = st.selectbox('Select Date Column', ['Date'])  # Assuming 'Date' is the date column
+        prediction_date = st.date_input('Prediction Date')
+        column_to_predict = st.selectbox('Select Column to Predict', stock_data.columns)
+
+        # Perform prediction using your SARIMA model
+        if st.button('Predict'):
+            try:
+                # Make sure your SARIMA model is capable of taking these inputs and returning predictions.
+                prediction = sarima_model.predict(stock_data[[column_to_predict]], prediction_date)
+
+                # Display the prediction
+                st.write(f'Predicted {column_to_predict} for {stock_symbol} on {prediction_date}: ${prediction:.2f}')
+            except Exception as e:
+                st.error(f'An error occurred: {str(e)}')
+
+    except Exception as e:
+        st.error(f'An error occurred while fetching stock data: {str(e)}')

@@ -11,10 +11,6 @@ import requests
 
 #------------------------------------------------------------------------------#
 # Page setup - the page title and layout
-st.sidebar.subheader("About")
-st.sidebar.write("The BullBears at Moringa School created this app. It uses pre-determined parameters of a SARIMA model to predict stock prices.")
-st.sidebar.write("We hope it helps!")
-
 im = Image.open('icon.png')
 st.set_page_config(page_title='The BullBear Oracle', page_icon=im,
     layout='wide', initial_sidebar_state="expanded",menu_items={
@@ -22,6 +18,9 @@ st.set_page_config(page_title='The BullBear Oracle', page_icon=im,
         'Report a bug': "mailto:waruchu.analyst@gmail.com",
         'About': "# The BullBears at Moringa School created this app. We hope it helps!"
     })
+st.sidebar.subheader("About")
+st.sidebar.write("The BullBears at Moringa School created this app. It uses pre-determined parameters of a SARIMA model to predict stock prices.")
+st.sidebar.write("We hope it helps!")
 
 # Read and inject CSS
 # with open("style.css") as f:

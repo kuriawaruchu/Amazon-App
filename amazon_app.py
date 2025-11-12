@@ -82,7 +82,7 @@ def generate_sarima_predictions(start_date, end_date, sarima_hyperparameters):
     return predictions_df
 
 def main():
-    st.sidebar.image("https://github.com/kuriawaruchu/Amazon/blob/main/logo4.png?raw=true", width="100%", use_column_width=True)
+    st.sidebar.image("https://github.com/kuriawaruchu/Amazon/blob/main/logo4.png?raw=true", width="100%", use_container_width=True)
     
      # Generate predictions using the SARIMA model
     st.subheader('Choose Dates')
